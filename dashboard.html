@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CLI Notes | Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <main class="page-shell">
+
+    <header class="top-terminal-bar">
+      <div class="logo-wrap">
+        <img src="img/debooging.png" alt="App Logo" class="logo-img" />
+
+        <div class="logo-text">
+          <div class="app-title">CLI Notes</div>
+          <div class="app-subtitle">dashboard / cloud notes</div>
+        </div>
+      </div>
+
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="profile.html" class="nav-link">Profile</a>
+      <button type="button" class="btn" onclick="logoutUser()">Logout</button>
+    </header>
+
+    <nav class="breadcrumb">
+      home / <span>dashboard</span>
+    </nav>
+
+    <section class="dashboard-header">
+      <div>
+        <div class="terminal-label">~/notes/list</div>
+        <h1 class="auth-title">Your Notes</h1>
+      </div>
+
+      <a href="note.html?mode=new" class="btn btn-primary">Create Note</a>
+    </section>
+
+    <section class="panel">
+      <div id="notesList" class="notes-list">
+        <p class="empty-state">Loading your notes...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
