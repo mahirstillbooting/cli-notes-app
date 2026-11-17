@@ -1,74 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CLI Notes | Note</title>
+  <link rel="icon" type="image/png" href="img/logo-mark.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+  />
+  <script>
+    (function () {
+      var saved = localStorage.getItem("cli-notes-theme");
+      var theme = saved === "dark" || saved === "light"
+        ? saved
+        : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
   <main class="page-shell">
 
-    <header class="top-terminal-bar">
-      <div class="logo-wrap">
-        <img src="img/debooging.png" alt="App Logo" class="logo-img" />
+    <header class="topbar">
+      <a href="dashboard.html" class="brand-link">
+        <img src="img/logo-mark.png" alt="CLI Notes logo" class="brand-mark" width="38" height="38" />
+        <span class="brand-meta">
+          <span class="brand-title">CLI_NOTES</span>
+          <span class="brand-path" id="noteModeLabel">~/notes/editor</span>
+        </span>
+      </a>
 
-        <div class="logo-text">
-          <div class="app-title">CLI Notes</div>
-          <div class="app-subtitle">write / save / download</div>
-        </div>
+      <div class="topbar-controls">
+        <nav class="nav-group" aria-label="Main navigation">
+          <a href="dashboard.html" class="nav-pill is-active">Notes</a>
+          <a href="profile.html" class="nav-pill">Profile</a>
+        </nav>
+
+        <button type="button" class="theme-btn" data-theme-toggle aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"></path>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <span class="theme-btn-label">DARK</span>
+        </button>
+
+        <button type="button" class="btn btn-exit" onclick="logoutUser()" aria-label="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Exit</span>
+        </button>
       </div>
-
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="profile.html" class="nav-link">Profile</a>
-      <button type="button" class="btn" onclick="logoutUser()">Logout</button>
     </header>
 
-    <nav class="breadcrumb">
-      home / dashboard / <span>note</span>
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="dashboard.html">~/notes</a>
+      <span>/</span>
+      <span class="crumb-current" id="editorCrumb">editor</span>
     </nav>
 
-    <section class="dashboard-header">
+    <section class="page-head">
       <div>
-        <div class="terminal-label" id="noteModeLabel">~/notes/editor</div>
-        <h1 class="auth-title">Note Editor</h1>
+        <h1 class="page-heading" id="editorHeading">Note Editor</h1>
       </div>
 
       <div class="btn-row">
         <a href="dashboard.html" class="btn">Back</a>
-        <button type="button" id="downloadNoteBtn" class="btn">Download .txt</button>
+        <button type="button" id="copyNoteBtn" class="btn">Copy</button>
+        <button type="button" id="downloadNoteBtn" class="btn">.txt</button>
         <button type="button" id="saveNoteBtn" class="btn btn-primary">Save</button>
       </div>
     </section>
 
-    <section class="panel note-editor-panel">
+    <section id="editorSkeleton" class="skeleton-editor" hidden aria-hidden="true">
+      <div class="skeleton-block skeleton-title" style="width: 45%; height: 22px;"></div>
+      <div class="skeleton-block skeleton-line" style="height: 14px;"></div>
+      <div class="skeleton-block skeleton-line" style="height: 14px; width: 92%;"></div>
+      <div class="skeleton-block skeleton-line" style="height: 14px; width: 80%;"></div>
+      <div class="skeleton-block skeleton-line" style="height: 14px; width: 65%;"></div>
+    </section>
 
-      <div class="form-group">
-        <label for="noteTitle">Title</label>
+    <section id="editorShell" class="editor-shell">
+      <div class="editor-meta-bar">
+        <div class="editor-meta-left">
+          <label for="noteCategory" class="editor-meta-label">Tag</label>
+          <select id="noteCategory" class="editor-select" aria-label="Note category">
+            <option value="notes">Notes</option>
+            <option value="work">Work</option>
+            <option value="lists">Lists</option>
+            <option value="ideas">Ideas</option>
+          </select>
+
+          <button type="button" id="pinNoteBtn" class="pin-toggle-btn" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+              <path d="M12 17v5"></path>
+              <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76z"></path>
+            </svg>
+            <span id="pinNoteLabel">Pin</span>
+          </button>
+        </div>
+
+        <div id="saveBadge" class="save-badge">
+          <span class="save-badge-dot" aria-hidden="true"></span>
+          <span id="saveBadgeText">Ready · Ctrl+S</span>
+        </div>
+      </div>
+
+      <div class="editor-body">
+        <label for="noteTitle" class="sr-only">Note title</label>
         <input
           type="text"
           id="noteTitle"
-          class="form-control"
+          class="editor-title-input"
           placeholder="Untitled Note"
         />
-      </div>
 
-      <div class="form-group">
-        <label for="noteContent">Write</label>
+        <label for="noteContent" class="sr-only">Note content</label>
         <textarea
           id="noteContent"
-          class="form-control note-textarea"
-          placeholder="Start typing..."
+          class="note-textarea"
+          placeholder="Start typing your note..."
         ></textarea>
       </div>
 
-      <p id="noteStatus" class="status-message"></p>
-
+      <footer class="editor-footer">
+        <p id="noteStatus" class="status-message" role="status" aria-live="polite"></p>
+        <div id="editorStats" class="editor-stats">
+          <span>0 words</span>
+          <span>0 chars</span>
+          <span>1 line</span>
+        </div>
+      </footer>
     </section>
 
   </main>
 
+  <script type="module" src="js/theme.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/note.js"></script>
 </body>

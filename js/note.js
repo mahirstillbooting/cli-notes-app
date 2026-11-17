@@ -1,4 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  initializeApp,
+  getApps,
+  getApp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 
 import {
   getAuth,
@@ -16,8 +20,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import { firebaseConfig } from "./firebase-config.js";
+import { createDelayedLoader } from "./theme.js";
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
@@ -27,24 +32,87 @@ const mode = urlParams.get("mode");
 
 const noteTitle = document.getElementById("noteTitle");
 const noteContent = document.getElementById("noteContent");
+const noteCategory = document.getElementById("noteCategory");
+const pinNoteBtn = document.getElementById("pinNoteBtn");
+const pinNoteLabel = document.getElementById("pinNoteLabel");
 const saveNoteBtn = document.getElementById("saveNoteBtn");
 const downloadNoteBtn = document.getElementById("downloadNoteBtn");
+const copyNoteBtn = document.getElementById("copyNoteBtn");
 const noteStatus = document.getElementById("noteStatus");
 const noteModeLabel = document.getElementById("noteModeLabel");
+const editorHeading = document.getElementById("editorHeading");
+const editorCrumb = document.getElementById("editorCrumb");
+const editorStats = document.getElementById("editorStats");
+const saveBadge = document.getElementById("saveBadge");
+const saveBadgeText = document.getElementById("saveBadgeText");
+const editorSkeleton = document.getElementById("editorSkeleton");
+const editorShell = document.getElementById("editorShell");
+
+const VALID_CATEGORIES = ["notes", "work", "lists", "ideas"];
 
 let currentUser = null;
 let isExistingNote = Boolean(noteId);
+let isPinned = false;
+let isDirty = false;
+let isSaving = false;
 
-function showStatus(message) {
+const delayedEditorSkeleton = createDelayedLoader(
+  () => {
+    editorShell.hidden = true;
+    editorSkeleton.hidden = false;
+  },
+  () => {
+    editorSkeleton.hidden = true;
+    editorShell.hidden = false;
+  },
+  300
+);
+
+function showStatus(message, tone = "") {
   noteStatus.textContent = message;
+  noteStatus.classList.remove("is-success", "is-error");
+  if (tone === "success") {
+    noteStatus.classList.add("is-success");
+  } else if (tone === "error") {
+    noteStatus.classList.add("is-error");
+  }
+}
+
+function setDirty(dirty) {
+  isDirty = dirty;
+  saveBadge.classList.toggle("is-dirty", dirty);
+  saveBadgeText.textContent = dirty ? "Unsaved · Ctrl+S" : "Saved · Ctrl+S";
+}
+
+function syncPinUI() {
+  pinNoteBtn.setAttribute("aria-pressed", String(isPinned));
+  pinNoteLabel.textContent = isPinned ? "Pinned" : "Pin";
+}
+
+function updateStats() {
+  const text = noteContent.value;
+  const trimmed = text.trim();
+  const words = trimmed ? trimmed.split(/\s+/).length : 0;
+  const chars = text.length;
+  const lines = text ? text.split(/\r\n|\r|\n/).length : 1;
+
+  editorStats.innerHTML = `
+    <span>${words} word${words === 1 ? "" : "s"}</span>
+    <span>${chars} char${chars === 1 ? "" : "s"}</span>
+    <span>${lines} line${lines === 1 ? "" : "s"}</span>
+  `;
 }
 
 function setEditorMode() {
   if (mode === "new" || !noteId) {
     noteModeLabel.textContent = "~/notes/editor/new";
+    editorHeading.textContent = "New Note";
+    editorCrumb.textContent = "new";
     document.title = "CLI Notes | New Note";
   } else {
     noteModeLabel.textContent = "~/notes/editor/edit";
+    editorHeading.textContent = "Edit Note";
+    editorCrumb.textContent = "edit";
     document.title = "CLI Notes | Edit Note";
   }
 }
@@ -54,14 +122,16 @@ async function loadExistingNote() {
     return;
   }
 
-  try {
-    showStatus("Loading note...");
+  delayedEditorSkeleton.start();
 
+  try {
     const noteRef = doc(db, "users", currentUser.uid, "notes", noteId);
     const noteSnap = await getDoc(noteRef);
 
+    delayedEditorSkeleton.stop();
+
     if (!noteSnap.exists()) {
-      showStatus("Note not found.");
+      showStatus("Note not found.", "error");
       return;
     }
 
@@ -69,41 +139,62 @@ async function loadExistingNote() {
 
     noteTitle.value = noteData.title || "";
     noteContent.value = noteData.content || "";
+    const cat = String(noteData.category || "notes").toLowerCase();
+    noteCategory.value = VALID_CATEGORIES.includes(cat) ? cat : "notes";
+    isPinned = Boolean(noteData.pinned);
+    syncPinUI();
+    updateStats();
+    setDirty(false);
 
-    showStatus("Note loaded. Make changes and click Save.");
+    showStatus("Note loaded.", "success");
   } catch (error) {
-    showStatus("Could not load note: " + error.message);
+    delayedEditorSkeleton.stop();
+    showStatus("Could not load note: " + error.message, "error");
   }
 }
 
 async function saveNote() {
   if (!currentUser) {
-    showStatus("You must be logged in.");
+    showStatus("You must be logged in.", "error");
+    return;
+  }
+  if (isSaving) {
     return;
   }
 
   const title = noteTitle.value.trim() || "Untitled Note";
   const content = noteContent.value;
+  const category = VALID_CATEGORIES.includes(noteCategory.value)
+    ? noteCategory.value
+    : "notes";
+
+  isSaving = true;
+  saveNoteBtn.disabled = true;
+  showStatus("Saving...");
 
   try {
-    showStatus("Saving...");
-
     if (isExistingNote && noteId) {
       const noteRef = doc(db, "users", currentUser.uid, "notes", noteId);
 
-      await setDoc(noteRef, {
-        title: title,
-        content: content,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-
-      showStatus("Saved.");
+      await setDoc(
+        noteRef,
+        {
+          title,
+          content,
+          category,
+          pinned: isPinned,
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
+      );
     } else {
       const notesRef = collection(db, "users", currentUser.uid, "notes");
 
       const newNoteRef = await addDoc(notesRef, {
-        title: title,
-        content: content,
+        title,
+        content,
+        category,
+        pinned: isPinned,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -111,13 +202,30 @@ async function saveNote() {
       noteId = newNoteRef.id;
       isExistingNote = true;
 
-      window.history.replaceState(null, "", `note.html?id=${noteId}`);
+      window.history.replaceState(null, "", `note.html?id=${encodeURIComponent(noteId)}`);
       setEditorMode();
-
-      showStatus("Saved.");
     }
+
+    setDirty(false);
+    showStatus("Saved to cloud.", "success");
   } catch (error) {
-    showStatus("Could not save note: " + error.message);
+    showStatus("Could not save note: " + error.message, "error");
+  } finally {
+    isSaving = false;
+    saveNoteBtn.disabled = false;
+  }
+}
+
+async function copyNoteToClipboard() {
+  const title = noteTitle.value.trim() || "Untitled Note";
+  const content = noteContent.value;
+  const combined = content ? `${title}\n\n${content}` : title;
+
+  try {
+    await navigator.clipboard.writeText(combined);
+    showStatus("Copied note to clipboard.", "success");
+  } catch {
+    showStatus("Clipboard copy blocked by browser.", "error");
   }
 }
 
@@ -125,11 +233,12 @@ function downloadNoteAsTxt() {
   const title = noteTitle.value.trim() || "Untitled Note";
   const content = noteContent.value;
 
-  const safeFileName = title
-    .replace(/[<>:"/\\|?*]+/g, "")
-    .replace(/\s+/g, "_")
-    .toLowerCase()
-    .slice(0, 60) || "note";
+  const safeFileName =
+    title
+      .replace(/[<>:"/\\|?*]+/g, "")
+      .replace(/\s+/g, "_")
+      .toLowerCase()
+      .slice(0, 60) || "note";
 
   const fileText = `${title}\n\n${content}`;
   const blob = new Blob([fileText], { type: "text/plain;charset=utf-8" });
@@ -144,14 +253,51 @@ function downloadNoteAsTxt() {
   URL.revokeObjectURL(downloadLink.href);
   downloadLink.remove();
 
-  showStatus("Downloaded as .txt.");
+  showStatus("Downloaded as .txt.", "success");
 }
 
+noteTitle.addEventListener("input", () => setDirty(true));
+noteContent.addEventListener("input", () => {
+  updateStats();
+  setDirty(true);
+});
+noteCategory.addEventListener("change", () => setDirty(true));
+
+pinNoteBtn.addEventListener("click", () => {
+  isPinned = !isPinned;
+  syncPinUI();
+  setDirty(true);
+});
+
 saveNoteBtn.addEventListener("click", saveNote);
+copyNoteBtn.addEventListener("click", copyNoteToClipboard);
 downloadNoteBtn.addEventListener("click", downloadNoteAsTxt);
 
-onAuthStateChanged(auth, async function (user) {
+window.addEventListener("keydown", (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+    event.preventDefault();
+    saveNote();
+  }
+});
+
+window.addEventListener("beforeunload", (event) => {
+  if (isDirty) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+});
+
+setEditorMode();
+syncPinUI();
+updateStats();
+
+if (noteId) {
+  delayedEditorSkeleton.start();
+}
+
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
+    delayedEditorSkeleton.stop();
     return;
   }
 
@@ -161,6 +307,8 @@ onAuthStateChanged(auth, async function (user) {
   if (noteId) {
     await loadExistingNote();
   } else {
-    showStatus("New note. Write something and click Save.");
+    delayedEditorSkeleton.stop();
+    setDirty(false);
+    showStatus("Ready. Press Ctrl+S or click Save anytime.");
   }
 });

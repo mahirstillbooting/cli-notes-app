@@ -47,11 +47,31 @@ const signupStatus = document.getElementById("signupStatus");
 let googleSignupUser = null;
 let signupInProgress = false;
 
-function showStatus(element, message) {
+function showStatus(element, message, tone = "") {
   if (element) {
     element.textContent = message;
+    element.classList.remove("is-success", "is-error");
+    if (tone === "success") {
+      element.classList.add("is-success");
+    } else if (tone === "error") {
+      element.classList.add("is-error");
+    }
   }
 }
+
+document.querySelectorAll("[data-pw-toggle]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const targetId = btn.getAttribute("data-pw-toggle");
+    const input = document.getElementById(targetId);
+    if (!input) {
+      return;
+    }
+    const showing = input.type === "text";
+    input.type = showing ? "password" : "text";
+    btn.textContent = showing ? "Show" : "Hide";
+    btn.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+  });
+});
 
 function cleanFirebaseError(message) {
   return message

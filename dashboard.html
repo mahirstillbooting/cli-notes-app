@@ -1,51 +1,156 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CLI Notes | Dashboard</title>
+  <link rel="icon" type="image/png" href="img/logo-mark.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+  />
+  <script>
+    (function () {
+      var saved = localStorage.getItem("cli-notes-theme");
+      var theme = saved === "dark" || saved === "light"
+        ? saved
+        : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
   <main class="page-shell">
 
-    <header class="top-terminal-bar">
-      <div class="logo-wrap">
-        <img src="img/debooging.png" alt="App Logo" class="logo-img" />
+    <header class="topbar">
+      <a href="dashboard.html" class="brand-link">
+        <img src="img/logo-mark.png" alt="CLI Notes logo" class="brand-mark" width="38" height="38" />
+        <span class="brand-meta">
+          <span class="brand-title">CLI_NOTES</span>
+          <span class="brand-path">~/workspace/notes</span>
+        </span>
+      </a>
 
-        <div class="logo-text">
-          <div class="app-title">CLI Notes</div>
-          <div class="app-subtitle">dashboard / cloud notes</div>
-        </div>
+      <div class="topbar-controls">
+        <nav class="nav-group" aria-label="Main navigation">
+          <a href="dashboard.html" class="nav-pill is-active" aria-current="page">Notes</a>
+          <a href="profile.html" class="nav-pill">Profile</a>
+        </nav>
+
+        <button type="button" class="theme-btn" data-theme-toggle aria-label="Toggle color theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"></path>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <span class="theme-btn-label">DARK</span>
+        </button>
+
+        <button type="button" class="btn btn-exit" onclick="logoutUser()" aria-label="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Exit</span>
+        </button>
       </div>
-
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="profile.html" class="nav-link">Profile</a>
-      <button type="button" class="btn" onclick="logoutUser()">Logout</button>
     </header>
 
-    <nav class="breadcrumb">
-      home / <span>dashboard</span>
-    </nav>
-
-    <section class="dashboard-header">
+    <section class="page-head">
       <div>
-        <div class="terminal-label">~/notes/list</div>
-        <h1 class="auth-title">Your Notes</h1>
+        <h1 class="page-heading">Your Notes</h1>
+        <p class="page-subline" id="dashboardSubtitle">Synced cloud directory · private storage</p>
       </div>
 
-      <a href="note.html?mode=new" class="btn btn-primary">Create Note</a>
+      <a href="note.html?mode=new" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Create Note
+      </a>
     </section>
 
-    <section class="panel">
-      <div id="notesList" class="notes-list">
-        <p class="empty-state">Loading your notes...</p>
+    <section class="command-bar" aria-label="Search and sort notes">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <label for="searchInput" class="sr-only">Search notes by title</label>
+        <input
+          type="search"
+          id="searchInput"
+          class="search-input"
+          placeholder="Search notes by title..."
+          autocomplete="off"
+        />
+        <span class="kbd-hint" id="searchKbdHint" aria-hidden="true">/</span>
+        <button type="button" id="clearSearchBtn" class="search-clear-btn" hidden aria-label="Clear search">
+          ESC
+        </button>
       </div>
+
+      <label for="sortSelect" class="sr-only">Sort notes</label>
+      <select id="sortSelect" class="select-control" aria-label="Sort notes">
+        <option value="newest">Sort: Newest</option>
+        <option value="oldest">Sort: Oldest</option>
+        <option value="title-asc">Sort: Title A–Z</option>
+        <option value="title-desc">Sort: Title Z–A</option>
+      </select>
+
+      <label for="perPageSelect" class="sr-only">Notes per page</label>
+      <select id="perPageSelect" class="select-control" aria-label="Notes per page">
+        <option value="6" selected>6 / page</option>
+        <option value="12">12 / page</option>
+        <option value="24">24 / page</option>
+      </select>
     </section>
+
+    <section class="filter-row" aria-label="Filter notes by category">
+      <div id="categoryStrip" class="filter-strip" role="tablist" aria-label="Note categories">
+        <button type="button" class="filter-pill is-active" data-category="all" role="tab" aria-selected="true">
+          All <span class="filter-count" data-count="all">0</span>
+        </button>
+        <button type="button" class="filter-pill" data-category="notes" role="tab" aria-selected="false">
+          Notes <span class="filter-count" data-count="notes">0</span>
+        </button>
+        <button type="button" class="filter-pill" data-category="work" role="tab" aria-selected="false">
+          Work <span class="filter-count" data-count="work">0</span>
+        </button>
+        <button type="button" class="filter-pill" data-category="lists" role="tab" aria-selected="false">
+          Lists <span class="filter-count" data-count="lists">0</span>
+        </button>
+        <button type="button" class="filter-pill" data-category="ideas" role="tab" aria-selected="false">
+          Ideas <span class="filter-count" data-count="ideas">0</span>
+        </button>
+        <button type="button" class="filter-pill" data-category="pinned" role="tab" aria-selected="false">
+          Pinned <span class="filter-count" data-count="pinned">0</span>
+        </button>
+      </div>
+
+      <div id="resultsMeta" class="results-meta" aria-live="polite"></div>
+    </section>
+
+    <section aria-label="Notes list">
+      <div id="notesList" class="notes-grid"></div>
+    </section>
+
+    <nav id="paginationBar" class="pagination-bar" aria-label="Notes pagination" hidden>
+      <div id="paginationInfo" class="pagination-info"></div>
+      <div id="paginationControls" class="pagination-controls"></div>
+    </nav>
 
   </main>
 
+  <script type="module" src="js/theme.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/dashboard.js"></script>
 </body>
