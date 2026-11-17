@@ -41,6 +41,7 @@ const paginationControls = document.getElementById("paginationControls");
 const dashboardSubtitle = document.getElementById("dashboardSubtitle");
 
 const VALID_CATEGORIES = ["notes", "work", "lists", "ideas"];
+const VALID_TITLE_COLORS = ["none", "oxide", "ochre", "sage", "slate", "plum", "clay"];
 const SEARCH_DEBOUNCE_MS = 250;
 const SKELETON_DELAY_MS = 300;
 
@@ -70,6 +71,11 @@ function escapeHTML(text) {
 function normalizeCategory(raw) {
   const value = String(raw || "notes").toLowerCase().trim();
   return VALID_CATEGORIES.includes(value) ? value : "notes";
+}
+
+function normalizeTitleColor(raw) {
+  const value = String(raw || "none").toLowerCase().trim();
+  return VALID_TITLE_COLORS.includes(value) ? value : "none";
 }
 
 function getTimestampMillis(timestamp) {
@@ -341,8 +347,18 @@ function createNoteCard(note) {
     ? rawContent.slice(0, 180)
     : "Empty note — click to open editor.";
   const category = normalizeCategory(note.category);
+  const titleColor = normalizeTitleColor(note.titleColor);
   const words = countWords(rawContent);
   const isPinned = Boolean(note.pinned);
+
+  const colorMarkerHTML =
+    titleColor !== "none"
+      ? `<span class="title-color-icon" data-color="${titleColor}" title="Marker: ${titleColor}" aria-hidden="true">
+           <svg viewBox="0 0 16 16" fill="currentColor" stroke="var(--border-ink)" stroke-width="1.4">
+             <path d="M3 1.5h10v13L8 11.2 3 14.5z"></path>
+           </svg>
+         </span>`
+      : "";
 
   const card = document.createElement("a");
   card.href = `note.html?id=${encodeURIComponent(note.id)}`;
@@ -376,7 +392,10 @@ function createNoteCard(note) {
       </div>
     </div>
 
-    <h2 class="note-card-title">${escapeHTML(safeTitle)}</h2>
+    <div class="note-card-title-row">
+      ${colorMarkerHTML}
+      <h2 class="note-card-title">${escapeHTML(safeTitle)}</h2>
+    </div>
     <p class="note-card-snippet${rawContent ? "" : " is-empty"}">${escapeHTML(snippet)}</p>
 
     <div class="note-card-foot">

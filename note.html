@@ -108,6 +108,17 @@
             </svg>
             <span id="pinNoteLabel">Pin</span>
           </button>
+
+          <span class="editor-meta-label" id="titleColorLabel">Mark</span>
+          <div id="titleColorPicker" class="color-picker-group" role="radiogroup" aria-labelledby="titleColorLabel">
+            <button type="button" class="color-swatch-btn" data-color="none" role="radio" aria-checked="true" aria-label="No title color" title="No color"></button>
+            <button type="button" class="color-swatch-btn" data-color="oxide" role="radio" aria-checked="false" aria-label="Oxide red marker" title="Oxide"></button>
+            <button type="button" class="color-swatch-btn" data-color="ochre" role="radio" aria-checked="false" aria-label="Ochre amber marker" title="Ochre"></button>
+            <button type="button" class="color-swatch-btn" data-color="sage" role="radio" aria-checked="false" aria-label="Sage green marker" title="Sage"></button>
+            <button type="button" class="color-swatch-btn" data-color="slate" role="radio" aria-checked="false" aria-label="Slate blue marker" title="Slate"></button>
+            <button type="button" class="color-swatch-btn" data-color="plum" role="radio" aria-checked="false" aria-label="Dusty plum marker" title="Plum"></button>
+            <button type="button" class="color-swatch-btn" data-color="clay" role="radio" aria-checked="false" aria-label="Terracotta clay marker" title="Clay"></button>
+          </div>
         </div>
 
         <div id="saveBadge" class="save-badge">
@@ -118,12 +129,19 @@
 
       <div class="editor-body">
         <label for="noteTitle" class="sr-only">Note title</label>
-        <input
-          type="text"
-          id="noteTitle"
-          class="editor-title-input"
-          placeholder="Untitled Note"
-        />
+        <div class="editor-title-row">
+          <span id="editorTitleColorIcon" class="title-color-icon" data-color="none" hidden aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="currentColor" stroke="var(--border-ink)" stroke-width="1.4">
+              <path d="M3 1.5h10v13L8 11.2 3 14.5z"></path>
+            </svg>
+          </span>
+          <input
+            type="text"
+            id="noteTitle"
+            class="editor-title-input"
+            placeholder="Untitled Note"
+          />
+        </div>
 
         <label for="noteContent" class="sr-only">Note content</label>
         <textarea

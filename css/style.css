@@ -40,6 +40,14 @@
   --skeleton-base: #cfd1d6;
   --skeleton-mid: #c3c5cb;
 
+  /* Preset muted/dull note title color markers */
+  --note-oxide: #a83c36;
+  --note-ochre: #946b20;
+  --note-sage: #396b4f;
+  --note-slate: #45647c;
+  --note-plum: #745370;
+  --note-clay: #9c5938;
+
   /* Motion & geometry */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -84,6 +92,14 @@
   /* Skeleton tones */
   --skeleton-base: #22221e;
   --skeleton-mid: #2c2c27;
+
+  /* Preset muted/dull note title color markers */
+  --note-oxide: #c45a54;
+  --note-ochre: #c79a44;
+  --note-sage: #6ba382;
+  --note-slate: #7398b5;
+  --note-plum: #a57fa0;
+  --note-clay: #c77e5a;
 }
 
 /* Base reset & browser surface theming */
@@ -92,6 +108,10 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 html {
@@ -768,8 +788,15 @@ button {
   border-color: var(--danger);
 }
 
+.note-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .note-card-title {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 0.96rem;
   font-weight: 700;
   line-height: 1.32;
@@ -780,6 +807,32 @@ button {
   overflow: hidden;
   word-break: break-word;
 }
+
+/* Muted preset color marker icon for note titles */
+
+.title-color-icon {
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--marker-color, transparent);
+}
+
+.title-color-icon svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.title-color-icon[data-color="oxide"] { --marker-color: var(--note-oxide); }
+.title-color-icon[data-color="ochre"] { --marker-color: var(--note-ochre); }
+.title-color-icon[data-color="sage"]  { --marker-color: var(--note-sage); }
+.title-color-icon[data-color="slate"] { --marker-color: var(--note-slate); }
+.title-color-icon[data-color="plum"]  { --marker-color: var(--note-plum); }
+.title-color-icon[data-color="clay"]  { --marker-color: var(--note-clay); }
 
 .note-card-snippet {
   margin: 0 0 14px;
@@ -1331,10 +1384,27 @@ button {
   padding: 18px 16px 14px;
 }
 
+.editor-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.editor-title-row .title-color-icon {
+  margin-top: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.editor-title-row .title-color-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
 .editor-title-input {
   width: 100%;
   padding: 10px 12px;
-  margin-bottom: 14px;
   border: 2px solid var(--border-ink);
   border-radius: var(--radius-sm);
   background: var(--bg-input);
@@ -1347,6 +1417,51 @@ button {
 .editor-title-input:focus {
   border-color: var(--accent);
 }
+
+/* Editor preset muted color swatches */
+
+.color-picker-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  border: 2px solid var(--border-ink);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+}
+
+.color-swatch-btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1.5px solid var(--border-ink);
+  border-radius: 3px;
+  background: var(--swatch-color, var(--bg-input));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 100ms var(--ease-snappy);
+}
+
+.color-swatch-btn:hover {
+  transform: scale(1.1);
+}
+
+.color-swatch-btn[aria-checked="true"] {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.color-swatch-btn[data-color="none"] {
+  background: linear-gradient(135deg, var(--bg-input) 44%, var(--ink-faint) 44%, var(--ink-faint) 56%, var(--bg-input) 56%);
+}
+.color-swatch-btn[data-color="oxide"] { --swatch-color: var(--note-oxide); }
+.color-swatch-btn[data-color="ochre"] { --swatch-color: var(--note-ochre); }
+.color-swatch-btn[data-color="sage"]  { --swatch-color: var(--note-sage); }
+.color-swatch-btn[data-color="slate"] { --swatch-color: var(--note-slate); }
+.color-swatch-btn[data-color="plum"]  { --swatch-color: var(--note-plum); }
+.color-swatch-btn[data-color="clay"]  { --swatch-color: var(--note-clay); }
 
 .note-textarea {
   width: 100%;

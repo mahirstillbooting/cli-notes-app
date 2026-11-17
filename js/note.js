@@ -47,12 +47,16 @@ const saveBadge = document.getElementById("saveBadge");
 const saveBadgeText = document.getElementById("saveBadgeText");
 const editorSkeleton = document.getElementById("editorSkeleton");
 const editorShell = document.getElementById("editorShell");
+const titleColorPicker = document.getElementById("titleColorPicker");
+const editorTitleColorIcon = document.getElementById("editorTitleColorIcon");
 
 const VALID_CATEGORIES = ["notes", "work", "lists", "ideas"];
+const VALID_TITLE_COLORS = ["none", "oxide", "ochre", "sage", "slate", "plum", "clay"];
 
 let currentUser = null;
 let isExistingNote = Boolean(noteId);
 let isPinned = false;
+let titleColor = "none";
 let isDirty = false;
 let isSaving = false;
 
@@ -67,6 +71,34 @@ const delayedEditorSkeleton = createDelayedLoader(
   },
   300
 );
+
+function hideEditorSkeleton() {
+  delayedEditorSkeleton.stop();
+  editorSkeleton.hidden = true;
+  editorShell.hidden = false;
+}
+
+function normalizeTitleColor(raw) {
+  const value = String(raw || "none").toLowerCase().trim();
+  return VALID_TITLE_COLORS.includes(value) ? value : "none";
+}
+
+function syncTitleColorUI() {
+  const active = normalizeTitleColor(titleColor);
+  titleColor = active;
+
+  if (editorTitleColorIcon) {
+    editorTitleColorIcon.dataset.color = active;
+    editorTitleColorIcon.hidden = active === "none";
+  }
+
+  if (titleColorPicker) {
+    titleColorPicker.querySelectorAll(".color-swatch-btn").forEach((btn) => {
+      const isSelected = btn.dataset.color === active;
+      btn.setAttribute("aria-checked", String(isSelected));
+    });
+  }
+}
 
 function showStatus(message, tone = "") {
   noteStatus.textContent = message;
@@ -119,16 +151,15 @@ function setEditorMode() {
 
 async function loadExistingNote() {
   if (!currentUser || !noteId) {
+    hideEditorSkeleton();
     return;
   }
-
-  delayedEditorSkeleton.start();
 
   try {
     const noteRef = doc(db, "users", currentUser.uid, "notes", noteId);
     const noteSnap = await getDoc(noteRef);
 
-    delayedEditorSkeleton.stop();
+    hideEditorSkeleton();
 
     if (!noteSnap.exists()) {
       showStatus("Note not found.", "error");
@@ -142,13 +173,15 @@ async function loadExistingNote() {
     const cat = String(noteData.category || "notes").toLowerCase();
     noteCategory.value = VALID_CATEGORIES.includes(cat) ? cat : "notes";
     isPinned = Boolean(noteData.pinned);
+    titleColor = normalizeTitleColor(noteData.titleColor);
     syncPinUI();
+    syncTitleColorUI();
     updateStats();
     setDirty(false);
 
     showStatus("Note loaded.", "success");
   } catch (error) {
-    delayedEditorSkeleton.stop();
+    hideEditorSkeleton();
     showStatus("Could not load note: " + error.message, "error");
   }
 }
@@ -167,6 +200,7 @@ async function saveNote() {
   const category = VALID_CATEGORIES.includes(noteCategory.value)
     ? noteCategory.value
     : "notes";
+  const colorMarker = normalizeTitleColor(titleColor);
 
   isSaving = true;
   saveNoteBtn.disabled = true;
@@ -183,6 +217,7 @@ async function saveNote() {
           content,
           category,
           pinned: isPinned,
+          titleColor: colorMarker,
           updatedAt: serverTimestamp()
         },
         { merge: true }
@@ -195,6 +230,7 @@ async function saveNote() {
         content,
         category,
         pinned: isPinned,
+        titleColor: colorMarker,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -269,6 +305,16 @@ pinNoteBtn.addEventListener("click", () => {
   setDirty(true);
 });
 
+if (titleColorPicker) {
+  titleColorPicker.addEventListener("click", (event) => {
+    const swatch = event.target.closest(".color-swatch-btn");
+    if (!swatch) return;
+    titleColor = normalizeTitleColor(swatch.dataset.color);
+    syncTitleColorUI();
+    setDirty(true);
+  });
+}
+
 saveNoteBtn.addEventListener("click", saveNote);
 copyNoteBtn.addEventListener("click", copyNoteToClipboard);
 downloadNoteBtn.addEventListener("click", downloadNoteAsTxt);
@@ -289,7 +335,9 @@ window.addEventListener("beforeunload", (event) => {
 
 setEditorMode();
 syncPinUI();
+syncTitleColorUI();
 updateStats();
+hideEditorSkeleton();
 
 if (noteId) {
   delayedEditorSkeleton.start();
@@ -297,7 +345,7 @@ if (noteId) {
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    delayedEditorSkeleton.stop();
+    hideEditorSkeleton();
     return;
   }
 
@@ -307,7 +355,7 @@ onAuthStateChanged(auth, async (user) => {
   if (noteId) {
     await loadExistingNote();
   } else {
-    delayedEditorSkeleton.stop();
+    hideEditorSkeleton();
     setDirty(false);
     showStatus("Ready. Press Ctrl+S or click Save anytime.");
   }

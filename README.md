@@ -10,7 +10,7 @@ A lightweight, terminal-inspired cloud note-taking web app blending **CLI minima
 - **Debounced Title Search** — Waits 250ms after typing stops before running the search (`/` shortcut to focus, `Esc` to clear)
 - **Pagination** — Client-side pagination (`6 / 12 / 24` notes per page) with Prev/Next and numbered page controls
 - **Delayed Skeleton Loader** — Subtle CSS opacity-pulse skeletons appear only when an async load takes longer than `300ms`
-- **Categories & Pinning** — Organize notes into `Notes`, `Work`, `Lists`, or `Ideas`, and pin important notes to the top
+- **Categories, Pinning & Title Color Markers** — Organize notes into `Notes`, `Work`, `Lists`, or `Ideas`, pin important notes to the top, and tag note titles with preset muted color bookmark icons (`Oxide`, `Ochre`, `Sage`, `Slate`, `Plum`, `Clay`) for quick visual recall
 - **Real-Time Cloud Sync** — Live updates via Cloud Firestore `onSnapshot`
 - **Note Editor Utilities** — Live word/character/line counter, `Ctrl+S` save shortcut, clipboard copy, and `.txt` export
 - **Two-Step Inline Delete** — Safe mobile-friendly delete (`DEL` → `OK?`) without browser popups

@@ -67,6 +67,12 @@ function updateBanner(name, email) {
   profileAvatar.textContent = displayName.charAt(0).toUpperCase() || "U";
 }
 
+function hideProfileSkeleton() {
+  delayedProfileSkeleton.stop();
+  profileSkeleton.hidden = true;
+  profileBanner.hidden = false;
+}
+
 async function loadProfile(user) {
   currentUser = user;
   delayedProfileSkeleton.start();
@@ -91,7 +97,7 @@ async function loadProfile(user) {
   } catch (error) {
     showStatus("Could not load profile: " + error.message, "error");
   } finally {
-    delayedProfileSkeleton.stop();
+    hideProfileSkeleton();
   }
 }
 
@@ -141,7 +147,7 @@ delayedProfileSkeleton.start();
 
 onAuthStateChanged(auth, (user) => {
   if (!user) {
-    delayedProfileSkeleton.stop();
+    hideProfileSkeleton();
     return;
   }
 
