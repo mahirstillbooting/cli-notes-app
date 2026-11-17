@@ -1,5 +1,7 @@
 # CLI Notes
 
+**Live App:** [https://mahirstillbooting.github.io/cli-notes-app/](https://mahirstillbooting.github.io/cli-notes-app/)
+
 A lightweight, terminal-inspired cloud note-taking web app blending **CLI minimalism** with **muted Neo-Brutalist UI**, built with plain HTML, CSS, vanilla JavaScript, Firebase Authentication, and Cloud Firestore.
 
 ## Features
