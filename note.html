@@ -13,6 +13,11 @@
   />
   <script>
     (function () {
+      if (sessionStorage.getItem("cli-notes-logged-out") === "1") {
+        document.documentElement.style.visibility = "hidden";
+        window.location.replace("index.html");
+        return;
+      }
       var saved = localStorage.getItem("cli-notes-theme");
       var theme = saved === "dark" || saved === "light"
         ? saved
@@ -123,7 +128,7 @@
 
         <div id="saveBadge" class="save-badge">
           <span class="save-badge-dot" aria-hidden="true"></span>
-          <span id="saveBadgeText">Ready · Ctrl+S</span>
+          <span id="saveBadgeText">Ready</span>
         </div>
       </div>
 

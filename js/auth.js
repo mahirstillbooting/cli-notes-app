@@ -32,8 +32,11 @@ const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
 const currentPage = window.location.pathname.split("/").pop();
+const PROTECTED_PAGES = ["dashboard.html", "note.html", "profile.html"];
+const LOGGED_OUT_FLAG = "cli-notes-logged-out";
 
 const loginForm = document.getElementById("loginForm");
+const loginSubmitBtn = document.getElementById("loginSubmitBtn");
 const googleLoginBtn = document.getElementById("googleLoginBtn");
 const loginStatus = document.getElementById("loginStatus");
 
@@ -103,25 +106,53 @@ async function createOrUpdateUserDocument(user) {
 
 /* LOGIN PAGE */
 
-if (loginForm) {
-  loginForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
+async function handleEmailLogin() {
+  if (!loginForm) {
+    return;
+  }
 
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
+  if (!loginForm.reportValidity()) {
+    return;
+  }
 
-    try {
-      showStatus(loginStatus, "Signing in...");
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
 
-      await signInWithEmailAndPassword(auth, email, password);
-
-      showStatus(loginStatus, "Login successful. Redirecting...");
-      window.location.href = "dashboard.html";
-    } catch (error) {
-      console.error("Email login error code:", error.code);
-      console.error("Email login error message:", error.message);
-      showStatus(loginStatus, cleanFirebaseError(error.message));
+  try {
+    if (loginSubmitBtn) {
+      loginSubmitBtn.disabled = true;
     }
+    showStatus(loginStatus, "Signing in...");
+
+    await signInWithEmailAndPassword(auth, email, password);
+
+    sessionStorage.removeItem(LOGGED_OUT_FLAG);
+    showStatus(loginStatus, "Login successful. Redirecting...", "success");
+    window.location.replace("dashboard.html");
+  } catch (error) {
+    console.error("Email login error code:", error.code);
+    console.error("Email login error message:", error.message);
+    showStatus(loginStatus, cleanFirebaseError(error.message), "error");
+    if (loginSubmitBtn) {
+      loginSubmitBtn.disabled = false;
+    }
+  }
+}
+
+if (loginForm) {
+  // Prevent browser autofill or implicit form submission from logging in automatically.
+  // Login only runs when the user explicitly clicks the Sign In button.
+  loginForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+  });
+}
+
+if (loginSubmitBtn) {
+  loginSubmitBtn.addEventListener("click", function (event) {
+    if (!event.isTrusted) {
+      return;
+    }
+    handleEmailLogin();
   });
 }
 
@@ -141,18 +172,20 @@ if (googleLoginBtn) {
 
         showStatus(
           loginStatus,
-          "No account found. Please use the Signup page first."
+          "No account found. Please use the Signup page first.",
+          "error"
         );
 
         return;
       }
 
-      showStatus(loginStatus, "Login successful. Redirecting...");
-      window.location.href = "dashboard.html";
+      sessionStorage.removeItem(LOGGED_OUT_FLAG);
+      showStatus(loginStatus, "Login successful. Redirecting...", "success");
+      window.location.replace("dashboard.html");
     } catch (error) {
       console.error("Google login error code:", error.code);
       console.error("Google login error message:", error.message);
-      showStatus(loginStatus, cleanFirebaseError(error.message));
+      showStatus(loginStatus, cleanFirebaseError(error.message), "error");
     }
   });
 }
@@ -276,21 +309,56 @@ if (signupForm) {
   });
 }
 
-/* REDIRECT LOGIC */
+/* REDIRECT LOGIC & MOBILE BACK-BUTTON (BFCACHE) PROTECTION */
+
+function redirectToLoginClean() {
+  document.documentElement.style.visibility = "hidden";
+  const sensitiveIds = ["notesList", "noteTitle", "noteContent", "profileName", "profileEmail"];
+  sensitiveIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if ("value" in el) {
+      el.value = "";
+    } else {
+      el.innerHTML = "";
+    }
+  });
+  window.location.replace("index.html");
+}
 
 onAuthStateChanged(auth, function (user) {
-  const protectedPages = ["dashboard.html", "note.html", "profile.html"];
-
   if (currentPage === "signup.html" && signupInProgress) {
     return;
   }
 
-  if (user && (currentPage === "index.html" || currentPage === "")) {
-    window.location.href = "dashboard.html";
+  if (user) {
+    sessionStorage.removeItem(LOGGED_OUT_FLAG);
+    if (currentPage === "index.html" || currentPage === "") {
+      window.location.replace("dashboard.html");
+    }
+    return;
   }
 
-  if (!user && protectedPages.includes(currentPage)) {
-    window.location.href = "index.html";
+  if (PROTECTED_PAGES.includes(currentPage)) {
+    redirectToLoginClean();
+  }
+});
+
+window.addEventListener("pageshow", async function (event) {
+  if (!PROTECTED_PAGES.includes(currentPage)) {
+    return;
+  }
+
+  if (sessionStorage.getItem(LOGGED_OUT_FLAG) === "1") {
+    redirectToLoginClean();
+    return;
+  }
+
+  if (event.persisted) {
+    await auth.authStateReady();
+    if (!auth.currentUser) {
+      redirectToLoginClean();
+    }
   }
 });
 
@@ -375,10 +443,12 @@ function getOrCreateLogoutDialog() {
     errorEl.hidden = true;
 
     try {
+      sessionStorage.setItem(LOGGED_OUT_FLAG, "1");
       await signOut(auth);
       closeModal();
-      window.location.href = "index.html";
+      redirectToLoginClean();
     } catch (error) {
+      sessionStorage.removeItem(LOGGED_OUT_FLAG);
       errorEl.textContent = `Could not sign out: ${cleanFirebaseError(error.message)}`;
       errorEl.hidden = false;
       confirmBtn.disabled = false;
@@ -406,8 +476,9 @@ window.logoutUser = function () {
     dialog.showModal();
     cancelBtn.focus();
   } else if (window.confirm("Sign out of CLI Notes? Your saved notes stay safe in the cloud.")) {
+    sessionStorage.setItem(LOGGED_OUT_FLAG, "1");
     signOut(auth).then(() => {
-      window.location.href = "index.html";
+      redirectToLoginClean();
     });
   }
 };

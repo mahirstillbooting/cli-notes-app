@@ -13,6 +13,11 @@
   />
   <script>
     (function () {
+      if (sessionStorage.getItem("cli-notes-logged-out") === "1") {
+        document.documentElement.style.visibility = "hidden";
+        window.location.replace("index.html");
+        return;
+      }
       var saved = localStorage.getItem("cli-notes-theme");
       var theme = saved === "dark" || saved === "light"
         ? saved
@@ -66,7 +71,7 @@
     <section class="page-head">
       <div>
         <h1 class="page-heading">Your Notes</h1>
-        <p class="page-subline" id="dashboardSubtitle">Synced cloud directory · private storage</p>
+        <p class="page-subline" id="dashboardSubtitle"></p>
       </div>
 
       <a href="note.html?mode=new" class="btn btn-primary">

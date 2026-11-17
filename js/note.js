@@ -92,6 +92,10 @@ function syncTitleColorUI() {
     editorTitleColorIcon.hidden = active === "none";
   }
 
+  if (noteTitle) {
+    noteTitle.dataset.color = active;
+  }
+
   if (titleColorPicker) {
     titleColorPicker.querySelectorAll(".color-swatch-btn").forEach((btn) => {
       const isSelected = btn.dataset.color === active;
@@ -113,7 +117,7 @@ function showStatus(message, tone = "") {
 function setDirty(dirty) {
   isDirty = dirty;
   saveBadge.classList.toggle("is-dirty", dirty);
-  saveBadgeText.textContent = dirty ? "Unsaved · Ctrl+S" : "Saved · Ctrl+S";
+  saveBadgeText.textContent = dirty ? "Unsaved" : "Saved";
 }
 
 function syncPinUI() {
@@ -357,6 +361,6 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     hideEditorSkeleton();
     setDirty(false);
-    showStatus("Ready. Press Ctrl+S or click Save anytime.");
+    showStatus("Ready. Write your note and click Save.");
   }
 });

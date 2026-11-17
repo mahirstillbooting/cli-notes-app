@@ -40,13 +40,13 @@
   --skeleton-base: #cfd1d6;
   --skeleton-mid: #c3c5cb;
 
-  /* Preset muted/dull note title color markers */
-  --note-oxide: #a83c36;
-  --note-ochre: #946b20;
-  --note-sage: #396b4f;
-  --note-slate: #45647c;
-  --note-plum: #745370;
-  --note-clay: #9c5938;
+  /* Preset muted/dull note title colors (WCAG AA >= 4.5:1 on light cards) */
+  --note-oxide: #942e29;
+  --note-ochre: #755210;
+  --note-sage: #28573c;
+  --note-slate: #2f4d66;
+  --note-plum: #5e3c5a;
+  --note-clay: #7d4124;
 
   /* Motion & geometry */
   --radius-sm: 4px;
@@ -93,13 +93,13 @@
   --skeleton-base: #22221e;
   --skeleton-mid: #2c2c27;
 
-  /* Preset muted/dull note title color markers */
-  --note-oxide: #c45a54;
-  --note-ochre: #c79a44;
-  --note-sage: #6ba382;
-  --note-slate: #7398b5;
-  --note-plum: #a57fa0;
-  --note-clay: #c77e5a;
+  /* Preset muted/dull note title colors (WCAG AA >= 4.5:1 on dark cards) */
+  --note-oxide: #d1746e;
+  --note-ochre: #cfa554;
+  --note-sage: #7ab390;
+  --note-slate: #82a8c7;
+  --note-plum: #b893b3;
+  --note-clay: #d18c6a;
 }
 
 /* Base reset & browser surface theming */
@@ -832,6 +832,19 @@ button {
 .title-color-icon[data-color="slate"] { --marker-color: var(--note-slate); }
 .title-color-icon[data-color="plum"]  { --marker-color: var(--note-plum); }
 .title-color-icon[data-color="clay"]  { --marker-color: var(--note-clay); }
+
+.note-card-title[data-color="oxide"],
+.editor-title-input[data-color="oxide"] { color: var(--note-oxide); }
+.note-card-title[data-color="ochre"],
+.editor-title-input[data-color="ochre"] { color: var(--note-ochre); }
+.note-card-title[data-color="sage"],
+.editor-title-input[data-color="sage"]  { color: var(--note-sage); }
+.note-card-title[data-color="slate"],
+.editor-title-input[data-color="slate"] { color: var(--note-slate); }
+.note-card-title[data-color="plum"],
+.editor-title-input[data-color="plum"]  { color: var(--note-plum); }
+.note-card-title[data-color="clay"],
+.editor-title-input[data-color="clay"]  { color: var(--note-clay); }
 
 .note-card-snippet {
   margin: 0 0 14px;

@@ -400,12 +400,12 @@ function createNoteCard(note) {
 
     <div class="note-card-title-row">
       ${colorMarkerHTML}
-      <h2 class="note-card-title">${escapeHTML(safeTitle)}</h2>
+      <h2 class="note-card-title" data-color="${titleColor}">${escapeHTML(safeTitle)}</h2>
     </div>
     <p class="note-card-snippet${rawContent ? "" : " is-empty"}">${escapeHTML(snippet)}</p>
 
     <div class="note-card-foot">
-      <span>${escapeHTML(formatDate(note.updatedAt))} · ${words}w</span>
+      <span>${escapeHTML(formatDate(note.updatedAt))} · ${words} ${words === 1 ? "word" : "words"}</span>
       <span class="note-card-dot" aria-hidden="true"></span>
     </div>
   `;
@@ -631,8 +631,8 @@ onAuthStateChanged(auth, (user) => {
   }
 
   state.userId = user.uid;
-  if (dashboardSubtitle && user.displayName) {
-    dashboardSubtitle.textContent = `Signed in as ${user.displayName} · private cloud notes`;
+  if (dashboardSubtitle) {
+    dashboardSubtitle.textContent = user.displayName || user.email || "";
   }
 
   const notesRef = collection(db, "users", user.uid, "notes");
