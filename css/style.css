@@ -781,8 +781,7 @@ button {
   border-color: var(--amber);
 }
 
-.card-action-btn.is-danger:hover,
-.card-action-btn.is-confirming {
+.card-action-btn.is-danger:hover {
   background: var(--danger);
   color: var(--accent-ink);
   border-color: var(--danger);
@@ -1083,6 +1082,176 @@ button {
   max-width: 44ch;
   font-size: 0.82rem;
   color: var(--ink-muted);
+}
+
+/* ==========================================================================
+   Delete Confirmation Dialog (Lightweight GPU-composited micro-animation)
+   ========================================================================== */
+
+@keyframes dialog-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.94);
+  }
+  68% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.015);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes backdrop-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes trash-lid-wiggle {
+  0% {
+    transform: rotate(0deg) translateY(0);
+  }
+  28% {
+    transform: rotate(-14deg) translateY(-2px);
+  }
+  58% {
+    transform: rotate(9deg) translateY(-1px);
+  }
+  82% {
+    transform: rotate(-4deg) translateY(0);
+  }
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+}
+
+.confirm-dialog {
+  width: min(410px, calc(100% - 28px));
+  padding: 0;
+  border: 2px solid var(--border-ink);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.confirm-dialog[open] {
+  animation: dialog-pop 230ms var(--ease-snappy) both;
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(14, 14, 13, 0.56);
+  animation: backdrop-fade 160ms ease-out both;
+}
+
+.confirm-dialog-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--border-ink);
+  background: var(--bg-card);
+}
+
+.confirm-dialog-path {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+
+.dialog-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1.5px solid var(--border-ink);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.dialog-close-btn:hover {
+  background: var(--bg-pill);
+}
+
+.dialog-close-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.confirm-dialog-body {
+  padding: 18px;
+}
+
+.confirm-dialog-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.cute-trash-svg {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  color: var(--danger);
+  overflow: visible;
+  margin-top: 2px;
+}
+
+.confirm-dialog[open] .trash-lid {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: trash-lid-wiggle 420ms var(--ease-snappy) 90ms both;
+}
+
+.confirm-dialog-copy {
+  min-width: 0;
+}
+
+.confirm-dialog-title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.confirm-dialog-text {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  word-break: break-word;
+}
+
+.confirm-note-name {
+  color: var(--ink);
+}
+
+.confirm-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btn-danger-solid {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-danger-solid:hover {
+  background: var(--accent-hover);
+  color: var(--accent-ink);
 }
 
 /* ==========================================================================

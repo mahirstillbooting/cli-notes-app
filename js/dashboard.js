@@ -39,6 +39,12 @@ const paginationBar = document.getElementById("paginationBar");
 const paginationInfo = document.getElementById("paginationInfo");
 const paginationControls = document.getElementById("paginationControls");
 const dashboardSubtitle = document.getElementById("dashboardSubtitle");
+const deleteDialog = document.getElementById("deleteDialog");
+const deleteDialogNoteName = document.getElementById("deleteDialogNoteName");
+const deleteDialogError = document.getElementById("deleteDialogError");
+const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+const closeDeleteDialogBtn = document.getElementById("closeDeleteDialogBtn");
 
 const VALID_CATEGORIES = ["notes", "work", "lists", "ideas"];
 const VALID_TITLE_COLORS = ["none", "oxide", "ochre", "sage", "slate", "plum", "clay"];
@@ -56,7 +62,7 @@ const state = {
   currentPage: 1
 };
 
-const pendingDeleteTimers = new WeakMap();
+let pendingDeleteNote = null;
 let unsubscribeNotes = null;
 
 function escapeHTML(text) {
@@ -423,49 +429,78 @@ function createNoteCard(note) {
   });
 
   const deleteBtn = card.querySelector('[data-action="delete"]');
-  deleteBtn.addEventListener("click", async (event) => {
+  deleteBtn.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
 
     if (!state.userId) return;
-
-    if (!deleteBtn.classList.contains("is-confirming")) {
-      deleteBtn.classList.add("is-confirming");
-      deleteBtn.textContent = "OK?";
-      deleteBtn.setAttribute("aria-label", `Confirm delete ${safeTitle}`);
-
-      const timer = setTimeout(() => {
-        deleteBtn.classList.remove("is-confirming");
-        deleteBtn.textContent = "DEL";
-        deleteBtn.setAttribute("aria-label", `Delete ${safeTitle}`);
-        pendingDeleteTimers.delete(deleteBtn);
-      }, 3000);
-
-      pendingDeleteTimers.set(deleteBtn, timer);
-      return;
-    }
-
-    const existingTimer = pendingDeleteTimers.get(deleteBtn);
-    if (existingTimer) {
-      clearTimeout(existingTimer);
-      pendingDeleteTimers.delete(deleteBtn);
-    }
-
-    deleteBtn.disabled = true;
-    deleteBtn.textContent = "...";
-
-    try {
-      await deleteDoc(doc(db, "users", state.userId, "notes", note.id));
-    } catch (error) {
-      resultsMeta.textContent = `Could not delete note: ${error.message}`;
-      deleteBtn.disabled = false;
-      deleteBtn.classList.remove("is-confirming");
-      deleteBtn.textContent = "DEL";
-    }
+    openDeleteDialog(note.id, safeTitle);
   });
 
   return card;
 }
+
+function openDeleteDialog(noteId, title) {
+  pendingDeleteNote = { id: noteId, title };
+  deleteDialogNoteName.textContent = `"${title}"`;
+  deleteDialogError.hidden = true;
+  deleteDialogError.textContent = "";
+  confirmDeleteBtn.disabled = false;
+  confirmDeleteBtn.textContent = "Delete Note";
+  cancelDeleteBtn.disabled = false;
+
+  if (typeof deleteDialog.showModal === "function") {
+    deleteDialog.showModal();
+    cancelDeleteBtn.focus();
+  } else if (window.confirm(`Delete "${title}" permanently?`)) {
+    executePendingDelete();
+  }
+}
+
+function closeDeleteDialog() {
+  pendingDeleteNote = null;
+  if (deleteDialog.open) {
+    deleteDialog.close();
+  }
+}
+
+async function executePendingDelete() {
+  if (!state.userId || !pendingDeleteNote) {
+    closeDeleteDialog();
+    return;
+  }
+
+  const targetId = pendingDeleteNote.id;
+  confirmDeleteBtn.disabled = true;
+  cancelDeleteBtn.disabled = true;
+  confirmDeleteBtn.textContent = "Deleting...";
+  deleteDialogError.hidden = true;
+
+  try {
+    await deleteDoc(doc(db, "users", state.userId, "notes", targetId));
+    closeDeleteDialog();
+  } catch (error) {
+    deleteDialogError.textContent = `Could not delete note: ${error.message}`;
+    deleteDialogError.hidden = false;
+    confirmDeleteBtn.disabled = false;
+    cancelDeleteBtn.disabled = false;
+    confirmDeleteBtn.textContent = "Delete Note";
+  }
+}
+
+cancelDeleteBtn.addEventListener("click", closeDeleteDialog);
+closeDeleteDialogBtn.addEventListener("click", closeDeleteDialog);
+confirmDeleteBtn.addEventListener("click", executePendingDelete);
+
+deleteDialog.addEventListener("click", (event) => {
+  if (event.target === deleteDialog) {
+    closeDeleteDialog();
+  }
+});
+
+deleteDialog.addEventListener("cancel", () => {
+  pendingDeleteNote = null;
+});
 
 function renderDashboard() {
   if (!state.loaded) {

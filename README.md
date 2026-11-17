@@ -15,7 +15,7 @@ A lightweight, terminal-inspired cloud note-taking web app blending **CLI minima
 - **Categories, Pinning & Title Color Markers** — Organize notes into `Notes`, `Work`, `Lists`, or `Ideas`, pin important notes to the top, and tag note titles with preset muted color bookmark icons (`Oxide`, `Ochre`, `Sage`, `Slate`, `Plum`, `Clay`) for quick visual recall
 - **Real-Time Cloud Sync** — Live updates via Cloud Firestore `onSnapshot`
 - **Note Editor Utilities** — Live word/character/line counter, `Ctrl+S` save shortcut, clipboard copy, and `.txt` export
-- **Two-Step Inline Delete** — Safe mobile-friendly delete (`DEL` → `OK?`) without browser popups
+- **Delete Confirmation Dialog** — Lightweight native `<dialog>` popup with a subtle one-shot CSS pop-in and trash-lid wiggle animation before deleting any note
 - **Profile Management** — Update your display name synced to Firebase Auth & Firestore
 
 ## Tech Stack
