@@ -294,9 +294,120 @@ onAuthStateChanged(auth, function (user) {
   }
 });
 
-/* LOGOUT HELPER */
+/* LOGOUT HELPER WITH CONFIRMATION MODAL */
 
-window.logoutUser = async function () {
-  await signOut(auth);
-  window.location.href = "index.html";
+function getOrCreateLogoutDialog() {
+  let dialog = document.getElementById("logoutDialog");
+  if (dialog) {
+    return dialog;
+  }
+
+  dialog = document.createElement("dialog");
+  dialog.id = "logoutDialog";
+  dialog.className = "confirm-dialog";
+  dialog.setAttribute("aria-labelledby", "logoutDialogTitle");
+  dialog.setAttribute("aria-describedby", "logoutDialogDesc");
+
+  dialog.innerHTML = `
+    <div class="confirm-dialog-bar">
+      <span class="confirm-dialog-path">~/session/logout</span>
+      <button type="button" class="dialog-close-btn" data-logout-close aria-label="Close logout confirmation">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+          <line x1="3" y1="3" x2="13" y2="13"></line>
+          <line x1="13" y1="3" x2="3" y2="13"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="confirm-dialog-body">
+      <div class="confirm-dialog-content">
+        <svg class="cute-exit-svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+          <path d="M14 5H6v22h8"></path>
+          <g class="exit-arrow">
+            <polyline points="20 11 26 16 20 21"></polyline>
+            <line x1="25" y1="16" x2="12" y2="16"></line>
+          </g>
+        </svg>
+
+        <div class="confirm-dialog-copy">
+          <h2 id="logoutDialogTitle" class="confirm-dialog-title">Sign out now?</h2>
+          <p id="logoutDialogDesc" class="confirm-dialog-text">
+            You will end this session and return to the login screen.
+          </p>
+          <p class="confirm-dialog-hint">Your saved notes stay safely synced in the cloud.</p>
+        </div>
+      </div>
+
+      <p class="status-message is-error" data-logout-error role="alert" hidden></p>
+
+      <div class="confirm-dialog-actions">
+        <button type="button" class="btn" data-logout-cancel>Stay</button>
+        <button type="button" class="btn btn-danger-solid" data-logout-confirm>Sign Out</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+
+  const cancelBtn = dialog.querySelector("[data-logout-cancel]");
+  const closeBtn = dialog.querySelector("[data-logout-close]");
+  const confirmBtn = dialog.querySelector("[data-logout-confirm]");
+  const errorEl = dialog.querySelector("[data-logout-error]");
+
+  function closeModal() {
+    if (dialog.open) {
+      dialog.close();
+    }
+  }
+
+  cancelBtn.addEventListener("click", closeModal);
+  closeBtn.addEventListener("click", closeModal);
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) {
+      closeModal();
+    }
+  });
+
+  confirmBtn.addEventListener("click", async () => {
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = "Signing out...";
+    errorEl.hidden = true;
+
+    try {
+      await signOut(auth);
+      closeModal();
+      window.location.href = "index.html";
+    } catch (error) {
+      errorEl.textContent = `Could not sign out: ${cleanFirebaseError(error.message)}`;
+      errorEl.hidden = false;
+      confirmBtn.disabled = false;
+      cancelBtn.disabled = false;
+      confirmBtn.textContent = "Sign Out";
+    }
+  });
+
+  return dialog;
+}
+
+window.logoutUser = function () {
+  const dialog = getOrCreateLogoutDialog();
+  const cancelBtn = dialog.querySelector("[data-logout-cancel]");
+  const confirmBtn = dialog.querySelector("[data-logout-confirm]");
+  const errorEl = dialog.querySelector("[data-logout-error]");
+
+  errorEl.hidden = true;
+  errorEl.textContent = "";
+  confirmBtn.disabled = false;
+  cancelBtn.disabled = false;
+  confirmBtn.textContent = "Sign Out";
+
+  if (typeof dialog.showModal === "function") {
+    dialog.showModal();
+    cancelBtn.focus();
+  } else if (window.confirm("Sign out of CLI Notes? Your saved notes stay safe in the cloud.")) {
+    signOut(auth).then(() => {
+      window.location.href = "index.html";
+    });
+  }
 };

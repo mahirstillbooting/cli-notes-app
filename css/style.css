@@ -1130,6 +1130,21 @@ button {
   }
 }
 
+@keyframes exit-arrow-nudge {
+  0% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-1px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 .confirm-dialog {
   width: min(410px, calc(100% - 28px));
   padding: 0;
@@ -1199,7 +1214,8 @@ button {
   gap: 14px;
 }
 
-.cute-trash-svg {
+.cute-trash-svg,
+.cute-exit-svg {
   width: 36px;
   height: 36px;
   flex-shrink: 0;
@@ -1208,10 +1224,18 @@ button {
   margin-top: 2px;
 }
 
+.cute-exit-svg {
+  color: var(--amber);
+}
+
 .confirm-dialog[open] .trash-lid {
   transform-box: fill-box;
   transform-origin: 50% 100%;
   animation: trash-lid-wiggle 420ms var(--ease-snappy) 90ms both;
+}
+
+.confirm-dialog[open] .exit-arrow {
+  animation: exit-arrow-nudge 380ms var(--ease-snappy) 90ms both;
 }
 
 .confirm-dialog-copy {
@@ -1231,6 +1255,13 @@ button {
   line-height: 1.55;
   color: var(--ink-muted);
   word-break: break-word;
+}
+
+.confirm-dialog-hint {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ink-faint);
 }
 
 .confirm-note-name {
