@@ -313,6 +313,7 @@ if (signupForm) {
 
 function redirectToLoginClean() {
   document.documentElement.style.visibility = "hidden";
+  sessionStorage.removeItem("cli-notes-user-name");
   const sensitiveIds = ["notesList", "noteTitle", "noteContent", "profileName", "profileEmail"];
   sensitiveIds.forEach((id) => {
     const el = document.getElementById(id);

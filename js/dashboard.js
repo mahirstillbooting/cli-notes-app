@@ -17,7 +17,8 @@ import {
   onSnapshot,
   deleteDoc,
   updateDoc,
-  doc
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import { firebaseConfig } from "./firebase-config.js";
@@ -51,6 +52,12 @@ const VALID_TITLE_COLORS = ["none", "oxide", "ochre", "sage", "slate", "plum", "
 const SEARCH_DEBOUNCE_MS = 250;
 const SKELETON_DELAY_MS = 300;
 const PAGE_STORAGE_KEY = "cli-notes-dashboard-page";
+const USER_NAME_STORAGE_KEY = "cli-notes-user-name";
+
+const initialCachedName = sessionStorage.getItem(USER_NAME_STORAGE_KEY);
+if (dashboardSubtitle && initialCachedName) {
+  dashboardSubtitle.textContent = initialCachedName;
+}
 
 function getInitialPage() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -663,7 +670,7 @@ categoryStrip.addEventListener("click", (event) => {
 /* Start delayed skeleton timer immediately so slow auth/Firestore loads show skeletons after 300ms */
 delayedSkeleton.start();
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (unsubscribeNotes) {
     unsubscribeNotes();
     unsubscribeNotes = null;
@@ -675,8 +682,32 @@ onAuthStateChanged(auth, (user) => {
   }
 
   state.userId = user.uid;
+
+  const cachedName = sessionStorage.getItem(USER_NAME_STORAGE_KEY);
   if (dashboardSubtitle) {
-    dashboardSubtitle.textContent = user.displayName || user.email || "";
+    if (cachedName) {
+      dashboardSubtitle.textContent = cachedName;
+    } else if (user.displayName || user.email) {
+      dashboardSubtitle.textContent = user.displayName || user.email;
+    }
+  }
+
+  // Load the exact user name set in their profile from Firestore
+  try {
+    const userDocRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userDocRef);
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      const profileName = (userData.fullName && userData.fullName.trim()) || user.displayName || user.email || "";
+      if (profileName) {
+        sessionStorage.setItem(USER_NAME_STORAGE_KEY, profileName);
+        if (dashboardSubtitle) {
+          dashboardSubtitle.textContent = profileName;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Could not load profile user name:", error);
   }
 
   const notesRef = collection(db, "users", user.uid, "notes");

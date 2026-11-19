@@ -93,6 +93,9 @@ async function loadProfile(user) {
       const resolvedName = userData.fullName || user.displayName || "";
       profileName.value = resolvedName;
       updateBanner(resolvedName, email);
+      if (resolvedName) {
+        sessionStorage.setItem("cli-notes-user-name", resolvedName);
+      }
     }
   } catch (error) {
     showStatus("Could not load profile: " + error.message, "error");
@@ -137,6 +140,7 @@ profileForm.addEventListener("submit", async (event) => {
     );
 
     updateBanner(newName, currentUser.email || "");
+    sessionStorage.setItem("cli-notes-user-name", newName);
     showStatus("Profile saved.", "success");
   } catch (error) {
     showStatus("Could not save profile: " + error.message, "error");
