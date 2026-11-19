@@ -10,12 +10,12 @@ A lightweight, terminal-inspired cloud note-taking web app blending **CLI minima
 - **Terminal × Neo-Brutalist UI** — Crisp ink borders, tactile offset shadows, subtle dot-matrix texture, and mobile-first performance (zero frameworks or heavy blur effects)
 - **Authentication** — Google Sign-In and Email/Password login via Firebase Auth
 - **Debounced Title Search** — Waits 250ms after typing stops before running the search (`/` shortcut to focus, `Esc` to clear)
-- **Pagination** — Client-side pagination (`6 / 12 / 24` notes per page) with Prev/Next and numbered page controls
+- **Pagination & Page Persistence** — Client-side pagination (`6 / 12 / 24` notes per page) with full state persistence across page refreshes and note navigation
 - **Delayed Skeleton Loader** — Subtle CSS opacity-pulse skeletons appear only when an async load takes longer than `300ms`
 - **Categories, Pinning & Title Color Markers** — Organize notes into `Notes`, `Work`, `Lists`, or `Ideas`, pin important notes to the top, and tag note titles with preset muted color bookmark icons (`Oxide`, `Ochre`, `Sage`, `Slate`, `Plum`, `Clay`) for quick visual recall
 - **Real-Time Cloud Sync** — Live updates via Cloud Firestore `onSnapshot`
 - **Note Editor Utilities** — Live word/character/line counter, `Ctrl+S` save shortcut, clipboard copy, and `.txt` export
-- **Delete Confirmation Dialog** — Lightweight native `<dialog>` popup with a subtle one-shot CSS pop-in and trash-lid wiggle animation before deleting any note
+- **Animated Confirmation Modals** — Lightweight native `<dialog>` popups with one-shot CSS micro-animations for note deletion, session sign-out, and unsaved changes confirmation
 - **Profile Management** — Update your display name synced to Firebase Auth & Firestore
 
 ## Tech Stack

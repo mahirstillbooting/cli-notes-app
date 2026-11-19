@@ -1158,6 +1158,24 @@ button {
   }
 }
 
+@keyframes unsaved-wiggle {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+  75% {
+    transform: rotate(-4deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
 .confirm-dialog {
   width: min(410px, calc(100% - 28px));
   padding: 0;
@@ -1228,7 +1246,8 @@ button {
 }
 
 .cute-trash-svg,
-.cute-exit-svg {
+.cute-exit-svg,
+.cute-unsaved-svg {
   width: 36px;
   height: 36px;
   flex-shrink: 0;
@@ -1237,7 +1256,8 @@ button {
   margin-top: 2px;
 }
 
-.cute-exit-svg {
+.cute-exit-svg,
+.cute-unsaved-svg {
   color: var(--amber);
 }
 
@@ -1249,6 +1269,12 @@ button {
 
 .confirm-dialog[open] .exit-arrow {
   animation: exit-arrow-nudge 380ms var(--ease-snappy) 90ms both;
+}
+
+.confirm-dialog[open] .unsaved-icon-mark {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: unsaved-wiggle 420ms var(--ease-snappy) 90ms both;
 }
 
 .confirm-dialog-copy {

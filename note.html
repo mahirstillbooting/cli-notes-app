@@ -57,7 +57,7 @@
           <span class="theme-btn-label">DARK</span>
         </button>
 
-        <button type="button" class="btn btn-exit" onclick="logoutUser()" aria-label="Logout">
+        <button type="button" class="btn btn-exit" id="noteExitBtn" aria-label="Logout">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
             <polyline points="16 17 21 12 16 7"></polyline>
@@ -167,6 +167,44 @@
     </section>
 
   </main>
+
+  <dialog id="unsavedDialog" class="confirm-dialog" aria-labelledby="unsavedDialogTitle" aria-describedby="unsavedDialogDesc">
+    <div class="confirm-dialog-bar">
+      <span class="confirm-dialog-path">~/confirm/unsaved</span>
+      <button type="button" id="closeUnsavedDialogBtn" class="dialog-close-btn" aria-label="Close dialog">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+          <line x1="3" y1="3" x2="13" y2="13"></line>
+          <line x1="13" y1="3" x2="3" y2="13"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="confirm-dialog-body">
+      <div class="confirm-dialog-content">
+        <svg class="cute-unsaved-svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+          <path d="M6 4h14l6 6v18H6V4z"></path>
+          <polyline points="20 4 20 10 26 10"></polyline>
+          <g class="unsaved-icon-mark">
+            <line x1="16" y1="13" x2="16" y2="19"></line>
+            <circle cx="16" cy="23" r="1.2" fill="currentColor" stroke="none"></circle>
+          </g>
+        </svg>
+
+        <div class="confirm-dialog-copy">
+          <h2 id="unsavedDialogTitle" class="confirm-dialog-title">Unsaved changes</h2>
+          <p id="unsavedDialogDesc" class="confirm-dialog-text">
+            Leave without saving? Your edits will be discarded.
+          </p>
+          <p class="confirm-dialog-hint">Click Save if you want to keep your changes.</p>
+        </div>
+      </div>
+
+      <div class="confirm-dialog-actions">
+        <button type="button" id="cancelUnsavedBtn" class="btn">Keep Editing</button>
+        <button type="button" id="confirmDiscardBtn" class="btn btn-danger-solid">Leave</button>
+      </div>
+    </div>
+  </dialog>
 
   <script type="module" src="js/theme.js"></script>
   <script type="module" src="js/auth.js"></script>

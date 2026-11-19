@@ -49,6 +49,20 @@ const editorSkeleton = document.getElementById("editorSkeleton");
 const editorShell = document.getElementById("editorShell");
 const titleColorPicker = document.getElementById("titleColorPicker");
 const editorTitleColorIcon = document.getElementById("editorTitleColorIcon");
+const unsavedDialog = document.getElementById("unsavedDialog");
+const cancelUnsavedBtn = document.getElementById("cancelUnsavedBtn");
+const confirmDiscardBtn = document.getElementById("confirmDiscardBtn");
+const closeUnsavedDialogBtn = document.getElementById("closeUnsavedDialogBtn");
+const noteExitBtn = document.getElementById("noteExitBtn");
+
+const fromPage = urlParams.get("fromPage") || sessionStorage.getItem("cli-notes-dashboard-page");
+const returnDashboardUrl = fromPage && parseInt(fromPage, 10) > 1
+  ? `dashboard.html?page=${encodeURIComponent(fromPage)}`
+  : "dashboard.html";
+
+document.querySelectorAll('a[href="dashboard.html"]').forEach((link) => {
+  link.href = returnDashboardUrl;
+});
 
 const VALID_CATEGORIES = ["notes", "work", "lists", "ideas"];
 const VALID_TITLE_COLORS = ["none", "oxide", "ochre", "sage", "slate", "plum", "clay"];
@@ -322,6 +336,103 @@ if (titleColorPicker) {
 saveNoteBtn.addEventListener("click", saveNote);
 copyNoteBtn.addEventListener("click", copyNoteToClipboard);
 downloadNoteBtn.addEventListener("click", downloadNoteAsTxt);
+
+let pendingNavigationUrl = null;
+let pendingNavigationAction = null;
+
+function requestExit(targetUrl, targetAction = null) {
+  if (!isDirty) {
+    if (targetAction) {
+      targetAction();
+    } else if (targetUrl) {
+      window.location.href = targetUrl;
+    }
+    return;
+  }
+
+  pendingNavigationUrl = targetUrl;
+  pendingNavigationAction = targetAction;
+
+  if (unsavedDialog && typeof unsavedDialog.showModal === "function") {
+    unsavedDialog.showModal();
+    if (cancelUnsavedBtn) {
+      cancelUnsavedBtn.focus();
+    }
+  } else if (window.confirm("Leave without saving? Your edits will be discarded.")) {
+    isDirty = false;
+    if (targetAction) {
+      targetAction();
+    } else if (targetUrl) {
+      window.location.href = targetUrl;
+    }
+  }
+}
+
+function closeUnsavedDialog() {
+  pendingNavigationUrl = null;
+  pendingNavigationAction = null;
+  if (unsavedDialog && unsavedDialog.open) {
+    unsavedDialog.close();
+  }
+}
+
+if (cancelUnsavedBtn) cancelUnsavedBtn.addEventListener("click", closeUnsavedDialog);
+if (closeUnsavedDialogBtn) closeUnsavedDialogBtn.addEventListener("click", closeUnsavedDialog);
+if (unsavedDialog) {
+  unsavedDialog.addEventListener("click", (event) => {
+    if (event.target === unsavedDialog) {
+      closeUnsavedDialog();
+    }
+  });
+  unsavedDialog.addEventListener("cancel", () => {
+    pendingNavigationUrl = null;
+    pendingNavigationAction = null;
+  });
+}
+
+if (confirmDiscardBtn) {
+  confirmDiscardBtn.addEventListener("click", () => {
+    isDirty = false;
+    const url = pendingNavigationUrl;
+    const action = pendingNavigationAction;
+    closeUnsavedDialog();
+    if (action) {
+      action();
+    } else if (url) {
+      window.location.href = url;
+    }
+  });
+}
+
+document.querySelectorAll("a[href]").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    const href = link.getAttribute("href");
+    if (!href || href.startsWith("#") || href.startsWith("javascript:")) {
+      return;
+    }
+    if (isDirty) {
+      event.preventDefault();
+      requestExit(link.href);
+    }
+  });
+});
+
+if (noteExitBtn) {
+  noteExitBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    if (isDirty) {
+      requestExit(null, () => {
+        if (typeof window.logoutUser === "function") {
+          window.logoutUser();
+        }
+      });
+    } else {
+      if (typeof window.logoutUser === "function") {
+        window.logoutUser();
+      }
+    }
+  });
+}
 
 window.addEventListener("keydown", (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {

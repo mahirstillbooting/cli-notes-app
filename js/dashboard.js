@@ -50,6 +50,36 @@ const VALID_CATEGORIES = ["notes", "work", "lists", "ideas"];
 const VALID_TITLE_COLORS = ["none", "oxide", "ochre", "sage", "slate", "plum", "clay"];
 const SEARCH_DEBOUNCE_MS = 250;
 const SKELETON_DELAY_MS = 300;
+const PAGE_STORAGE_KEY = "cli-notes-dashboard-page";
+
+function getInitialPage() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlPage = parseInt(urlParams.get("page"), 10);
+  if (Number.isFinite(urlPage) && urlPage > 0) {
+    return urlPage;
+  }
+  const saved = parseInt(sessionStorage.getItem(PAGE_STORAGE_KEY), 10);
+  if (Number.isFinite(saved) && saved > 0) {
+    return saved;
+  }
+  return 1;
+}
+
+function syncPageState(page) {
+  sessionStorage.setItem(PAGE_STORAGE_KEY, String(page));
+  const url = new URL(window.location.href);
+  if (page > 1) {
+    url.searchParams.set("page", String(page));
+  } else {
+    url.searchParams.delete("page");
+  }
+  window.history.replaceState(null, "", url.toString());
+
+  const createNoteLink = document.querySelector('a[href*="note.html?mode=new"]');
+  if (createNoteLink) {
+    createNoteLink.href = page > 1 ? `note.html?mode=new&fromPage=${page}` : "note.html?mode=new";
+  }
+}
 
 const state = {
   userId: null,
@@ -59,7 +89,7 @@ const state = {
   activeCategory: "all",
   sortBy: "newest",
   pageSize: 6,
-  currentPage: 1
+  currentPage: getInitialPage()
 };
 
 let pendingDeleteNote = null;
@@ -299,10 +329,13 @@ function renderPagination(totalItems, totalPages, startIdx, endIdx) {
   paginationControls.appendChild(nextBtn);
 }
 
-function goToPage(page) {
+function goToPage(page, options = { smooth: true }) {
   state.currentPage = page;
+  syncPageState(page);
   renderDashboard();
-  notesList.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (options && options.smooth) {
+    notesList.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 function renderEmptyState(hasAnyNotes) {
@@ -336,6 +369,7 @@ function renderEmptyState(hasAnyNotes) {
       state.searchQuery = "";
       state.activeCategory = "all";
       state.currentPage = 1;
+      syncPageState(1);
       searchInput.value = "";
       syncSearchClearUI();
       syncCategoryButtons();
@@ -366,8 +400,9 @@ function createNoteCard(note) {
          </span>`
       : "";
 
+  const fromPageParam = state.currentPage > 1 ? `&fromPage=${state.currentPage}` : "";
   const card = document.createElement("a");
-  card.href = `note.html?id=${encodeURIComponent(note.id)}`;
+  card.href = `note.html?id=${encodeURIComponent(note.id)}${fromPageParam}`;
   card.className = `note-card${isPinned ? " is-pinned" : ""}`;
 
   card.innerHTML = `
@@ -516,6 +551,10 @@ function renderDashboard() {
   if (state.currentPage > totalPages) {
     state.currentPage = totalPages;
   }
+  if (state.currentPage < 1) {
+    state.currentPage = 1;
+  }
+  syncPageState(state.currentPage);
 
   if (state.searchQuery.trim()) {
     resultsMeta.textContent = `${totalItems} match${totalItems === 1 ? "" : "es"} for "${state.searchQuery.trim()}"`;
@@ -563,6 +602,7 @@ function syncCategoryButtons() {
 const handleDebouncedSearch = debounce((rawValue) => {
   state.searchQuery = rawValue;
   state.currentPage = 1;
+  syncPageState(1);
   renderDashboard();
 }, SEARCH_DEBOUNCE_MS);
 
@@ -576,6 +616,7 @@ clearSearchBtn.addEventListener("click", () => {
   searchInput.value = "";
   state.searchQuery = "";
   state.currentPage = 1;
+  syncPageState(1);
   syncSearchClearUI();
   renderDashboard();
   searchInput.focus();
@@ -596,6 +637,7 @@ window.addEventListener("keydown", (event) => {
 sortSelect.addEventListener("change", (event) => {
   state.sortBy = event.target.value;
   state.currentPage = 1;
+  syncPageState(1);
   renderDashboard();
 });
 
@@ -603,6 +645,7 @@ perPageSelect.addEventListener("change", (event) => {
   const parsed = Number.parseInt(event.target.value, 10);
   state.pageSize = Number.isFinite(parsed) && parsed > 0 ? parsed : 6;
   state.currentPage = 1;
+  syncPageState(1);
   renderDashboard();
 });
 
@@ -612,6 +655,7 @@ categoryStrip.addEventListener("click", (event) => {
 
   state.activeCategory = btn.dataset.category || "all";
   state.currentPage = 1;
+  syncPageState(1);
   syncCategoryButtons();
   renderDashboard();
 });
